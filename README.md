@@ -89,3 +89,19 @@ Configura las cabeceras comunes de comunicación y atrapa de forma centralizada 
 * `/products/create` ➔ Formulario para crear un nuevo producto con select de categorías dinámico.
 * `/products/:id/edit` ➔ Formulario para editar un producto existente.
 * `/categories` ➔ Sección de categorías (Permite listado, creación, edición y borrado directo en una interfaz modal unificada).
+
+---
+
+## 🐳 Ejecución con Docker (Alternativa)
+
+Si prefieres ejecutar el frontend dentro de un contenedor Docker (usando la configuración de Dockerfile y docker-compose que incluimos):
+
+1. **Levantar el contenedor**:
+   ```bash
+   docker-compose up -d --build
+   ```
+   
+2. **Acceso**:
+   El proyecto compilará las fuentes en caliente y servirá la aplicación de producción a través de Nginx en:
+   `http://localhost:3000`
+
