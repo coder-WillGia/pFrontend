@@ -1,8 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-/* Custom scrollbar and minor global styles */
 body {
-  @apply bg-gray-50 text-gray-900 antialiased;
+  background-color: rgb(248, 250, 252); /* slate-50 */
+  color: rgb(15, 23, 42); /* slate-900 */
 }
