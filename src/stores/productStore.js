@@ -5,19 +5,26 @@ import { useNotificationStore } from './notificationStore';
 export const useProductStore = defineStore('product', {
     state: () => ({
         products: [],
+        meta: null,
         currentProduct: null,
         loading: false,
         error: null,
         successMessage: null
     }),
     actions: {
-        async fetchProducts() {
+        async fetchProducts(perPage = null, page = 1) {
             this.loading = true;
             this.error = null;
             try {
-                const response = await productService.getProducts();
+                const response = await productService.getProducts(perPage, page);
                 if (response.success) {
-                    this.products = response.data;
+                    if (perPage !== null) {
+                        this.products = response.data.items;
+                        this.meta = response.data.meta;
+                    } else {
+                        this.products = response.data;
+                        this.meta = null;
+                    }
                 }
             } catch (err) {
                 this.error = err.response?.data?.message || 'Error al obtener productos';

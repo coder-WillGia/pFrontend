@@ -1,8 +1,9 @@
 import api from './api';
 
 export default {
-    async getProducts() {
-        const response = await api.get('/products');
+    async getProducts(perPage = null, page = 1) {
+        const url = perPage ? `/products?per_page=${perPage}&page=${page}` : '/products';
+        const response = await api.get(url);
         return response.data;
     },
     async getProduct(id) {

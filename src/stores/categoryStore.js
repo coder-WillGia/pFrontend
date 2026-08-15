@@ -5,18 +5,25 @@ import { useNotificationStore } from './notificationStore';
 export const useCategoryStore = defineStore('category', {
     state: () => ({
         categories: [],
+        meta: null,
         loading: false,
         error: null,
         successMessage: null
     }),
     actions: {
-        async fetchCategories() {
+        async fetchCategories(perPage = null, page = 1) {
             this.loading = true;
             this.error = null;
             try {
-                const response = await categoryService.getCategories();
+                const response = await categoryService.getCategories(perPage, page);
                 if (response.success) {
-                    this.categories = response.data;
+                    if (perPage !== null) {
+                        this.categories = response.data.items;
+                        this.meta = response.data.meta;
+                    } else {
+                        this.categories = response.data;
+                        this.meta = null;
+                    }
                 }
             } catch (err) {
                 this.error = err.response?.data?.message || 'Error al obtener categorías';

@@ -1,8 +1,9 @@
 import api from './api';
 
 export default {
-    async getCategories() {
-        const response = await api.get('/categories');
+    async getCategories(perPage = null, page = 1) {
+        const url = perPage ? `/categories?per_page=${perPage}&page=${page}` : '/categories';
+        const response = await api.get(url);
         return response.data;
     },
     async getCategory(id) {

@@ -112,33 +112,47 @@
 </template>
 
 <script setup>
-import { onMounted, computed } from 'vue';
-import { useProductStore } from '../stores/productStore';
-import { useCategoryStore } from '../stores/categoryStore';
+import { ref, onMounted } from 'vue';
+import dashboardService from '../services/dashboardService';
 
-const productStore = useProductStore();
-const categoryStore = useCategoryStore();
+const loading = ref(true);
+const stats = ref({
+  total_categories: 0,
+  total_products: 0,
+  total_stock: 0,
+  latest_products: []
+});
 
 onMounted(async () => {
-  // Load data in parallel
-  await Promise.all([
-    productStore.fetchProducts(),
-    categoryStore.fetchCategories()
-  ]);
+  loading.value = true;
+  try {
+    const response = await dashboardService.getStats();
+    if (response.success) {
+      stats.value = response.data;
+    }
+  } catch (err) {
+    console.error('Error al obtener estadísticas del dashboard', err);
+  } finally {
+    loading.value = false;
+  }
 });
 
-const loading = computed(() => productStore.loading || categoryStore.loading);
-const products = computed(() => productStore.products);
+const productCount = ref(0);
+const categoryCount = ref(0);
+const totalStock = ref(0);
+const products = ref([]);
 
-const productCount = computed(() => products.value.length);
-const categoryCount = computed(() => categoryStore.categories.length);
-
-const totalStock = computed(() => {
-  return products.value.reduce((acc, p) => acc + parseInt(p.stock || 0), 0);
+// Sync values for template properties
+import { watchEffect } from 'vue';
+watchEffect(() => {
+  productCount.value = stats.value.total_products;
+  categoryCount.value = stats.value.total_categories;
+  totalStock.value = stats.value.total_stock;
+  products.value = stats.value.latest_products;
 });
 
-const latestProducts = computed(() => {
-  // Return the last 5 added products
-  return [...products.value].slice(-5).reverse();
+const latestProducts = ref([]);
+watchEffect(() => {
+  latestProducts.value = stats.value.latest_products;
 });
 </script>

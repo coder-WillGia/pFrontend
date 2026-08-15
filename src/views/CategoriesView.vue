@@ -50,7 +50,6 @@
         <table class="min-w-full divide-y divide-slate-200">
           <thead class="bg-slate-50">
             <tr>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">ID (UUID)</th>
               <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Nombre</th>
               <th scope="col" class="px-6 py-4 class-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Fecha Creación</th>
               <th scope="col" class="relative px-6 py-4 text-right">
@@ -60,7 +59,6 @@
           </thead>
           <tbody class="divide-y divide-slate-200 bg-white">
             <tr v-for="category in categoryStore.categories" :key="category.id" class="hover:bg-slate-50/70 transition">
-              <td class="whitespace-nowrap px-6 py-4 text-sm font-mono text-slate-500 select-all">{{ category.id }}</td>
               <td class="whitespace-nowrap px-6 py-4 text-sm font-semibold text-slate-900">{{ category.name }}</td>
               <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-500">{{ category.created_at || '-' }}</td>
               <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium space-x-3">
@@ -80,6 +78,57 @@
             </tr>
           </tbody>
         </table>
+        
+        <!-- Pagination controls -->
+        <div v-if="categoryStore.meta && categoryStore.meta.last_page > 1" class="flex items-center justify-between border-t border-slate-200 bg-white px-4 py-3 sm:px-6">
+          <div class="flex flex-1 justify-between sm:hidden">
+            <button
+              @click="changePage(categoryStore.meta.current_page - 1)"
+              :disabled="categoryStore.meta.current_page === 1"
+              class="relative inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Anterior
+            </button>
+            <button
+              @click="changePage(categoryStore.meta.current_page + 1)"
+              :disabled="categoryStore.meta.current_page === categoryStore.meta.last_page"
+              class="relative ml-3 inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Siguiente
+            </button>
+          </div>
+          <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+            <div>
+              <p class="text-sm text-slate-700">
+                Mostrando página <span class="font-semibold text-slate-900">{{ categoryStore.meta.current_page }}</span> de <span class="font-semibold text-slate-900">{{ categoryStore.meta.last_page }}</span> (Total: <span class="font-semibold text-slate-900">{{ categoryStore.meta.total }}</span> registros)
+              </p>
+            </div>
+            <div>
+              <nav class="isolate inline-flex -space-x-px rounded-md shadow-xs" aria-label="Pagination">
+                <button
+                  @click="changePage(categoryStore.meta.current_page - 1)"
+                  :disabled="categoryStore.meta.current_page === 1"
+                  class="relative inline-flex items-center rounded-l-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                >
+                  <span class="sr-only">Anterior</span>
+                  <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+                <button
+                  @click="changePage(categoryStore.meta.current_page + 1)"
+                  :disabled="categoryStore.meta.current_page === categoryStore.meta.last_page"
+                  class="relative inline-flex items-center rounded-r-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                >
+                  <span class="sr-only">Siguiente</span>
+                  <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </nav>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -211,9 +260,18 @@ const deleteModalOpen = ref(false);
 const categoryToDelete = ref(null);
 const deleting = ref(false);
 
+const currentPage = ref(1);
+const perPage = ref(5);
+
 onMounted(() => {
-  categoryStore.fetchCategories();
+  categoryStore.fetchCategories(perPage.value, currentPage.value);
 });
+
+const changePage = (page) => {
+  if (page < 1 || (categoryStore.meta && page > categoryStore.meta.last_page)) return;
+  currentPage.value = page;
+  categoryStore.fetchCategories(perPage.value, currentPage.value);
+};
 
 // Create Modal actions
 const openCreateModal = () => {
@@ -253,6 +311,7 @@ const submitForm = async () => {
     } else {
       await categoryStore.createCategory(form.value.name);
     }
+    await categoryStore.fetchCategories(perPage.value, currentPage.value);
     closeModal();
   } catch (err) {
     if (err.response?.status === 422) {
@@ -284,6 +343,7 @@ const executeDelete = async () => {
   deleting.value = true;
   try {
     await categoryStore.deleteCategory(categoryToDelete.value.id);
+    await categoryStore.fetchCategories(perPage.value, currentPage.value);
     closeDeleteModal();
   } catch (err) {
     // Error is handled globally by Axios interceptor (e.g. shows associated products message)
