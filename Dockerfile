@@ -6,13 +6,11 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# --- ETAPA 2: Produccion (Servidor Node ligero para servir los estaticos compilados) ---
+# --- ETAPA 2: Produccion (Servidor estatico para Single Page Application) ---
 FROM node:20-alpine
 WORKDIR /app
 COPY --from=builder /app/dist ./dist
-COPY vite.config.js ./
-COPY package*.json ./
-RUN npm install --only=production
+RUN npm install -g serve
 
-# Levantar el servidor de previsualizacion de Vite escuchando directamente y de forma obligatoria en la variable de entorno PORT
-CMD npx vite preview --host 0.0.0.0 --port $PORT
+# Levantar el servidor sirviendo la SPA en el puerto asignado por Render
+CMD serve -s dist -l tcp://0.0.0.0:$PORT
