@@ -8,6 +8,9 @@ export default defineConfig(({ mode }) => {
     plugins: [vue()],
     server: {
       port: parseInt(env.PORT)
+    },
+    preview: {
+      allowedHosts: true
     }
   }
 })
