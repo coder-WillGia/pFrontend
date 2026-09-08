@@ -69,7 +69,7 @@
               </td>
               <td class="whitespace-nowrap px-6 py-4">
                 <span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">
-                  {{ getCategoryName(product.category_id) }}
+                  {{ product.category?.name || 'Sin Categoría' }}
                 </span>
               </td>
               <td class="whitespace-nowrap px-6 py-4 text-sm font-bold text-slate-900">
@@ -217,10 +217,7 @@ const currentPage = ref(1);
 const perPage = ref(5);
 
 onMounted(async () => {
-  await Promise.all([
-    productStore.fetchProducts(perPage.value, currentPage.value),
-    categoryStore.fetchCategories() // Load all categories to map product category names
-  ]);
+  productStore.fetchProducts(perPage.value, currentPage.value);
 });
 
 const changePage = (page) => {
@@ -229,12 +226,11 @@ const changePage = (page) => {
   productStore.fetchProducts(perPage.value, currentPage.value);
 };
 
-const loading = computed(() => productStore.loading || categoryStore.loading);
+const loading = computed(() => productStore.loading);
 const products = computed(() => productStore.products);
 
-const getCategoryName = (categoryId) => {
-  const category = categoryStore.categories.find(c => c.id === categoryId);
-  return category ? category.name : 'Sin Categoría';
+const getCategoryName = (product) => {
+  return product.category?.name || 'Sin Categoría';
 };
 
 // Delete actions
